@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GUI settings for FedRoute demo -->
+<viewsettings>
+    <scheme name="real world">
+        <background backgroundColor="240,240,240" showGrid="1" gridXSize="100.0" gridYSize="100.0"/>
+        <vehicles vehicleQuality="2" vehicleSize="2.0" vehicleTextParam="id" showBlinker="1" drawMinGap="1"/>
+        <junctions drawLinkTLIndex="0" drawLinkJunctionIndex="0"/>
+    </scheme>
+    <viewport zoom="130" x="500" y="500" angle="0"/>
+    <delay value="100"/>
+</viewsettings>
+
+

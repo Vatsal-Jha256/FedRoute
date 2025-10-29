@@ -1,0 +1,154 @@
+% TikZ Flowcharts for FedRoute Paper
+% Include these in your LaTeX paper
+
+% Required packages:
+% \usepackage{tikz}
+% \usetikzlibrary{shapes.geometric, arrows, positioning, fit, calc}
+
+% ==================================================================
+% FLOWCHART 1: FedRoute System Architecture
+% ==================================================================
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm and 2cm,
+    every node/.style={font=\small},
+    component/.style={rectangle, draw, fill=blue!10, text width=3.5cm, text centered, rounded corners, minimum height=1cm},
+    data/.style={cylinder, shape border rotate=90, draw, fill=green!10, text width=2cm, text centered, minimum height=0.8cm},
+    process/.style={rectangle, draw, fill=orange!10, text width=3cm, text centered, rounded corners, minimum height=0.9cm},
+    decision/.style={diamond, draw, fill=yellow!10, text width=2.2cm, text centered, aspect=2},
+    arrow/.style={thick,->,>=stealth}
+]
+
+% Top layer - Data Sources
+\node[data] (mobility) {Vehicle Trajectories};
+\node[data, right=of mobility] (music) {Music Listening Data};
+\node[data, right=of music] (pois) {POI Database};
+
+% Middle layer - Client Processing
+\node[component, below=1.5cm of music] (client) {Client Vehicles\\(Edge Devices)};
+\node[process, below=of client] (local) {Local FMTL\\Training};
+
+% Feature extraction
+\node[process, left=2.5cm of local] (features) {Context\\Extraction};
+
+% Server layer
+\node[component, below=1.8cm of local] (server) {Federated Server};
+\node[process, below=of server] (agg) {Secure\\Aggregation};
+
+% Selection
+\node[decision, right=2cm of server] (selection) {Client\\Selection};
+
+% Model components
+\node[component, below=1.5cm of agg] (encoder) {Shared Context Encoder};
+\node[process, below left=0.8cm and 0.5cm of encoder] (path) {Path Head};
+\node[process, below right=0.8cm and 0.5cm of encoder] (musichead) {Music Head};
+
+% Privacy
+\node[process, left=2.5cm of agg, fill=red!10] (privacy) {Differential\\Privacy};
+
+% Arrows
+\draw[arrow] (mobility) -- (client);
+\draw[arrow] (music) -- (client);
+\draw[arrow] (pois) -- (client);
+\draw[arrow] (client) -- (local);
+\draw[arrow] (local) -- (server);
+\draw[arrow] (server) -- (agg);
+\draw[arrow] (agg) -- (encoder);
+\draw[arrow] (encoder) -- (path);
+\draw[arrow] (encoder) -- (musichead);
+\draw[arrow] (selection) -- (server);
+\draw[arrow] (privacy) -- (agg);
+\draw[arrow] (features) -- (local);
+\draw[arrow] (client) -- (features);
+
+% Global model update
+\draw[arrow, dashed, bend left=45] (encoder) to node[right, font=\footnotesize] {Global\\Model} (server);
+
+\end{tikzpicture}
+\caption{FedRoute System Architecture: The framework integrates vehicle trajectories, music listening patterns, and POI data through a federated multi-task learning approach with privacy-preserving mechanisms.}
+\label{fig:system_architecture}
+\end{figure}
+
+% ==================================================================
+% FLOWCHART 2: Federated Learning Training Process
+% ==================================================================
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm and 1.5cm,
+    every node/.style={font=\small},
+    start/.style={ellipse, draw, fill=green!20, text width=2cm, text centered, minimum height=0.8cm},
+    process/.style={rectangle, draw, fill=blue!10, text width=3.2cm, text centered, rounded corners, minimum height=0.9cm},
+    decision/.style={diamond, draw, fill=yellow!10, text width=2.5cm, text centered, aspect=2.5},
+    end/.style={ellipse, draw, fill=red!20, text width=2cm, text centered, minimum height=0.8cm},
+    arrow/.style={thick,->,>=stealth}
+]
+
+% Start
+\node[start] (start) {Initialize Global Model};
+
+% Main process flow
+\node[process, below=of start] (round) {Round $t$};
+\node[process, below=of round] (select) {Multi-Objective Client Selection};
+\node[process, below=of select] (broadcast) {Broadcast Global Model $w^t$};
+\node[process, below=of broadcast] (local1) {Local Training:\\$K$ epochs on each client};
+\node[process, below=of local1] (clip) {Gradient Clipping\\(DP mechanism)};
+\node[process, below=of clip] (upload) {Upload Local Updates};
+\node[process, below=of upload] (aggregate) {Secure Aggregation\\+ DP Noise};
+\node[process, below=of aggregate] (update) {Update Global Model:\\$w^{t+1}$};
+
+% Decision
+\node[decision, below=1.2cm of update] (converged) {Converged or\\Max Rounds?};
+
+% End
+\node[end, below=1cm of converged] (end) {Final Model};
+
+% Loop back
+\coordinate[left=3cm of round] (loop);
+
+% Arrows
+\draw[arrow] (start) -- (round);
+\draw[arrow] (round) -- (select);
+\draw[arrow] (select) -- (broadcast);
+\draw[arrow] (broadcast) -- (local1);
+\draw[arrow] (local1) -- (clip);
+\draw[arrow] (clip) -- (upload);
+\draw[arrow] (upload) -- (aggregate);
+\draw[arrow] (aggregate) -- (update);
+\draw[arrow] (update) -- (converged);
+\draw[arrow] (converged) -- node[right] {Yes} (end);
+\draw[arrow] (converged) -- node[above] {No} ++(-2.5,0) |- (loop) -- (round);
+
+% Annotations
+\node[right=1.5cm of select, text width=3cm, font=\footnotesize, align=left] {
+    \textbf{Objectives:}\\
+    • Accuracy\\
+    • Efficiency\\
+    • Fairness\\
+    • Privacy
+};
+
+\node[right=1.5cm of aggregate, text width=3cm, font=\footnotesize, align=left] {
+    \textbf{Privacy:}\\
+    • $(\epsilon, \delta)$-DP\\
+    • $\epsilon = 1.0$\\
+    • $\delta = 10^{-5}$
+};
+
+\end{tikzpicture}
+\caption{Federated Learning Training Process: FedRoute employs multi-objective client selection, local FMTL training with differential privacy, and secure aggregation to produce a globally optimized model while preserving user privacy.}
+\label{fig:fl_process}
+\end{figure}
+
+% ==================================================================
+% Usage instructions:
+% 1. Copy the desired flowchart into your LaTeX document
+% 2. Make sure you have the required packages in your preamble
+% 3. Adjust node positioning as needed for your paper layout
+% 4. Customize colors and styles to match your paper's theme
+% ==================================================================
+
+
